@@ -1,2 +1,6 @@
 .*
 !.git*
+odinfmt.json
+build/
+
+samuflap/samuflap
