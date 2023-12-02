@@ -69,3 +69,57 @@ run :: proc() {
     samure.context_run(engine.ctx)
 }
 
+build_shader_program :: proc(
+    vertexCode: string,
+    fragmentCode: string,
+) -> (
+    u32,
+    bool,
+) {
+    // build and compile shader
+    vert_src := strings.clone_to_cstring(vertexCode)
+    frag_src := strings.clone_to_cstring(fragmentCode)
+    vert := gl.CreateShader(gl.VERTEX_SHADER)
+    frag := gl.CreateShader(gl.FRAGMENT_SHADER)
+    defer gl.DeleteShader(vert)
+    defer gl.DeleteShader(frag)
+
+    gl.ShaderSource(vert, 1, &vert_src, nil)
+    gl.ShaderSource(frag, 1, &frag_src, nil)
+
+    gl.CompileShader(vert)
+    gl.CompileShader(frag)
+
+    success: i32
+    log: [512]u8
+    gl.GetShaderiv(vert, gl.COMPILE_STATUS, &success)
+    if success == 0 {
+        gl.GetShaderInfoLog(vert, 512, nil, cast([^]u8)&log)
+        log_str := strings.clone_from_bytes(log[:])
+        fmt.eprintf("ERROR::VERTEX: %s\n", log_str)
+        return 0, false
+    }
+    gl.GetShaderiv(frag, gl.COMPILE_STATUS, &success)
+    if success == 0 {
+        gl.GetShaderInfoLog(frag, 512, nil, cast([^]u8)&log)
+        log_str := strings.clone_from_bytes(log[:])
+        fmt.eprintf("ERROR::FRAGMENT: %s\n", log_str)
+        return 0, false
+    }
+
+    shader_prog := gl.CreateProgram()
+    gl.AttachShader(shader_prog, vert)
+    gl.AttachShader(shader_prog, frag)
+    gl.LinkProgram(shader_prog)
+
+    gl.GetProgramiv(shader_prog, gl.LINK_STATUS, &success)
+    if success == 0 {
+        gl.GetProgramInfoLog(shader_prog, 512, nil, cast([^]u8)&log)
+        log_str := strings.clone_from_bytes(log[:])
+        fmt.eprintf("ERROR::PROGRAM: %s\n", log_str)
+        return 0, false
+    }
+
+    return shader_prog, true
+}
+
