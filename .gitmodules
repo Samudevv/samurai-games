@@ -1,0 +1,4 @@
+[submodule "lib/samurai-render"]
+	path = lib/samurai-render
+	url = https://github.com/Samudevv/samurai-render-odin.git
+	branch = 23.12.0
